@@ -1,0 +1,86 @@
+
+Inputs:
+	string direction("Long") [DisplayName = "Long, Short or Both", ToolTip = ""],
+	double kPeriod(10) [DisplayName = "K Period", ToolTip = ""],
+	double dPeriod(10) [DisplayName = "D Period", ToolTip = ""],
+	double priceH(High) [DisplayName = "Price High", ToolTip = ""],
+	double priceL(Low) [DisplayName = "Price Low", ToolTip = ""],
+	double priceC(Close) [DisplayName = "Price Close", ToolTip = ""],
+	int averageType(1) [DisplayName = "Average Type (1-SMA, 2-EMA)", ToolTip = ""];
+
+Variables:
+	double oFastK( 0.0 ),
+	double oFastD( 0.0 ),
+	double oSlowK( 0.0 ),
+	double oSlowD( 0.0 ),
+	bool pivotLow(False),
+	bool pivotHigh(False),
+	bool pivotLowRev(False),
+	bool exitLong(False),
+	bool pivotHighRev(False),
+	bool exitShort(False),
+	bool shortEntry(False),
+	bool shortExit(False),
+	bool longEntry(False),
+	bool longExit(False),
+	int result(-1);
+
+
+result = Stochastic(priceH, priceL, priceC, kPeriod, 3, dPeriod, averageType,
+	oFastK, oFastD, oSlowK, oSlowD);
+
+//def pivotLow = low > low[1] and low[1] < low[2] and low[2] < low[3];
+pivotLow = Low > Low[1] And Low[1] < Low[2] And Low[2] < Low[3];
+
+//def pivotHigh = high < high[1] and high[1] > high[2];
+pivotHigh = High < High[1] And High[1] > High[2];
+
+// def pivotLowReversal = ( pivotLow and close > high[1] ) or
+	// ( pivotLow[1] and close > high[2] and low > low[2] and high[1] < high[2] );
+pivotLowRev = (pivotLow And Close > High[1]) Or
+	(pivotLow[1] And Close > High[2] And Low > Low[2] And High[1] < High[2]);
+
+exitLong = oSlowD < oSlowD[1] And oSlowD[1] < oSlowD[2] And pivotLowRev = False And pivotLowRev[1] = False;
+
+// def pivotHighReversal = ( pivotHigh and close < low[1] ) or
+	// ( pivotHigh[2] and close < low[2] and high < high[2] and low[1] > low[2] );
+pivotHighRev = (pivotHigh And Close < Low[1]) Or
+	(pivotHigh[2] And Close < Low[2] And High < High[2] And Low[1]> Low[2]);
+
+exitShort = oSlowD > oSlowD[1] And oSlowD[1] > oSlowD[2] And pivotHighRev = False And pivotHighRev[1] = False;
+
+
+Switch(direction) Begin
+	Case "Long":
+		longEntry = pivotLowRev;
+		longExit = exitLong;
+		shortEntry = False;
+		shortExit = False;
+	Case "Short":
+		shortEntry = pivotHighRev;
+		shortExit = exitShort;
+		longEntry = False;
+		longExit = False;
+	Case "Both":
+		longEntry = pivotLowRev;
+		longExit = exitLong;
+		shortEntry = pivotHighRev;
+		shortExit = exitShort;
+	Default:
+		longEntry = pivotLowRev;
+		longExit = exitLong;
+		shortEntry = False;
+		shortExit = False;
+End;
+
+If (longEntry) Then
+	Buy ( !( "Long Entry" ) ) This Bar at Close;
+
+If (longExit) Then
+	Sell (!("Long Exit")) This Bar at Close;
+
+If (shortEntry) Then
+	SellShort(!("Short Entry")) This Bar at Close;
+
+If (shortExit) Then
+	BuyToCover(!("Short Exit")) This Bar at Close;
