@@ -42,7 +42,7 @@ StratAnalysis.ods
 ```
 ### Detailed video demo showing installation and settings
 
-[![Coming Soon](https://www.hahn-tech.com/wp-content/uploads/'')](https://www.youtube.com/'')
+[![Demo Video](https://www.hahn-tech.com/wp-content/uploads/2017/11/strat-guide-promo-sml.jpg)](https://www.youtube.com/watch?v=zGk4uhNGolo)
 
 ## Contributing
 
